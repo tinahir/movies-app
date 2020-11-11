@@ -3,6 +3,7 @@ import React from 'react';
 import { useQuery } from 'react-query';
 import { Link } from 'react-router-dom';
 import tw from 'twin.macro';
+import { appConfig } from '../AppConfig';
 import MessageBox from '../components/MessageBox';
 import SearchBox from '../components/SearchBox';
 import { fetcher } from '../fetcher';
@@ -20,7 +21,7 @@ function Movies() {
     (_, searchText) => {
       if (searchText) {
         return fetcher(
-          `http://www.omdbapi.com/?s=${searchText}&apikey=78e4292d&type=movie`
+          `${appConfig.url}?s=${searchText}&apikey=${appConfig.apikey}&type=movie`
         );
       }
       return Promise.resolve(null);

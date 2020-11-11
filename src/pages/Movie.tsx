@@ -8,6 +8,7 @@ import { IMovie } from '../Model/Movie';
 import MessageBox from '../components/MessageBox';
 import LeftArrowIcon from '../icons/LeftArraow';
 import { Link } from 'react-router-dom';
+import { appConfig } from '../AppConfig';
 
 function Movie() {
   const { id } = useParams();
@@ -15,7 +16,7 @@ function Movie() {
   const { data, isLoading, error } = useQuery<IMovie>(
     ['movie', id],
     (_, id: string) => {
-      return fetcher(`http://www.omdbapi.com/?i=${id}&apikey=78e4292d`);
+      return fetcher(`${appConfig.url}?i=${id}&apikey=${appConfig.apikey}`);
     }
   );
 
