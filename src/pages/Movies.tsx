@@ -17,8 +17,7 @@ function Movies() {
 
   const { data, isLoading, error } = useQuery<ISearchResult, Error>(
     ['movies', searchText],
-    (_, searchText, page = 1) => {
-      console.log(page);
+    (_, searchText) => {
       if (searchText) {
         return fetcher(
           `http://www.omdbapi.com/?s=${searchText}&apikey=78e4292d&type=movie`
@@ -37,7 +36,9 @@ function Movies() {
     }
 
     if (error) {
-      return <MessageBox>{error.message}</MessageBox>;
+      return (
+        <MessageBox>There is some problem while featching the data.</MessageBox>
+      );
     }
 
     if (!data) {

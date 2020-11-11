@@ -2,7 +2,7 @@
 import React from 'react';
 import tw from 'twin.macro';
 
-export default function SearchIcon() {
+export default function LeftArrowIcon() {
   return (
     <svg
       css={tw`w-6 h-6`}
@@ -15,7 +15,7 @@ export default function SearchIcon() {
         strokeLinecap="round"
         strokeLinejoin="round"
         strokeWidth="2"
-        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+        d="M15 19l-7-7 7-7"
       ></path>
     </svg>
   );
