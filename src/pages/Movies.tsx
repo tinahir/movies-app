@@ -1,6 +1,6 @@
 /** @jsxImportSource @emotion/core */
 import React from 'react';
-import { useQuery } from 'react-query';
+import { useInfiniteQuery } from 'react-query';
 import { Link } from 'react-router-dom';
 import tw from 'twin.macro';
 import { appConfig } from '../AppConfig';
@@ -16,18 +16,31 @@ import {
 function Movies() {
   const [searchText, setSearchText] = React.useState('marvel');
 
-  const { data, isLoading, error } = useQuery<ISearchResult, Error>(
+  const { data, isLoading, error, fetchMore, canFetchMore } = useInfiniteQuery<
+    ISearchResult,
+    Error
+  >(
     ['movies', searchText],
-    (_, searchText) => {
-      if (searchText) {
-        return fetcher(
-          `${appConfig.url}?s=${searchText}&apikey=${appConfig.apikey}&type=movie`
-        );
-      }
-      return Promise.resolve(null);
+    (_, searchText, page = 1) => {
+      return fetcher(
+        `${appConfig.url}?s=${searchText}&apikey=${appConfig.apikey}&type=movie&page=${page}`
+      ).then((res: ISearchResult) => {
+        if (res.Response === 'True') {
+          (res as ISearchSuccess).page = page + 1;
+        }
+        return res;
+      });
     },
     {
       enabled: searchText.trim() !== '',
+      getFetchMore: (lastPage) => {
+        let res = lastPage as ISearchSuccess;
+        if (res.Search.length < 10) {
+          return false;
+        }
+        return res.page;
+      },
+      refetchOnWindowFocus: false,
     }
   );
 
@@ -35,7 +48,6 @@ function Movies() {
     if (isLoading) {
       return <MessageBox>Loading...</MessageBox>;
     }
-
     if (error) {
       return (
         <MessageBox>There is some problem while featching the data.</MessageBox>
@@ -46,43 +58,47 @@ function Movies() {
       return <MessageBox>Your favourite movie did not find</MessageBox>;
     }
 
-    if (data.Response === 'False') {
-      return <MessageBox>{(data as ISearchFail).Error}</MessageBox>;
+    if (data[0].Response === 'False') {
+      return <MessageBox>{(data[0] as ISearchFail).Error}</MessageBox>;
     }
 
     return (
       <article
         css={tw`mt-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-8`}
       >
-        {(data as ISearchSuccess).Search.map((item) => (
-          <Link to={`/movies/${item.imdbID}`} key={item.imdbID}>
-            <article css={tw`md:flex flex-col shadow`}>
-              {item.Poster === 'N/A' ? (
-                <div
-                  css={tw`md:flex-shrink-0 flex items-center justify-center text-2xl font-extrabold	h-64 w-full bg-gray-900 text-white text-opacity-30`}
-                >
-                  No Poster
-                </div>
-              ) : (
-                <figure css={tw`md:flex-shrink-0 bg-gray-900`}>
-                  <img
-                    css={tw`object-cover h-64 w-full`}
-                    alt={item.Title}
-                    src={item.Poster}
-                    loading="eager"
-                  ></img>
-                </figure>
-              )}
+        {data.map((page, index) => (
+          <React.Fragment key={index}>
+            {(page as ISearchSuccess).Search.map((item) => (
+              <Link to={`/movies/${item.imdbID}`} key={item.imdbID}>
+                <article css={tw`md:flex flex-col shadow`}>
+                  {item.Poster === 'N/A' ? (
+                    <div
+                      css={tw`md:flex-shrink-0 flex items-center justify-center text-2xl font-extrabold	h-64 w-full bg-gray-900 text-white text-opacity-30`}
+                    >
+                      No Poster
+                    </div>
+                  ) : (
+                    <figure css={tw`md:flex-shrink-0 bg-gray-900`}>
+                      <img
+                        css={tw`object-cover h-64 w-full`}
+                        alt={item.Title}
+                        src={item.Poster}
+                        loading="eager"
+                      ></img>
+                    </figure>
+                  )}
 
-              <div css={tw`p-4`}>
-                <div css={tw` tracking-wide text-sm text-white font-bold`}>
-                  {item.Title}
-                </div>
+                  <div css={tw`p-4`}>
+                    <div css={tw` tracking-wide text-sm text-white font-bold`}>
+                      {item.Title}
+                    </div>
 
-                <p css={tw`mt-2 text-gray-600 mt-1`}>{item.Year}</p>
-              </div>
-            </article>
-          </Link>
+                    <p css={tw`mt-2 text-gray-600 mt-1`}>{item.Year}</p>
+                  </div>
+                </article>
+              </Link>
+            ))}
+          </React.Fragment>
         ))}
       </article>
     );
@@ -96,6 +112,20 @@ function Movies() {
     <div css={tw`mt-10 mx-auto max-w-screen-xl px-4`}>
       <SearchBox defaultValue="marvel" onSearch={handleSearch}></SearchBox>
       {renderContent()}
+      {canFetchMore && (
+        <div css={tw`mt-5 sm:mt-8 sm:flex sm:justify-center`}>
+          <div
+            css={tw`mt-3 sm:mt-0 sm:ml-3 mt-5 sm:mt-8 sm:flex sm:justify-center`}
+          >
+            <button
+              onClick={() => fetchMore()}
+              css={tw`w-full flex items-center justify-center px-8 py-3 border border-transparent text-base leading-6 font-medium rounded-md text-indigo-700 bg-indigo-100 hover:text-indigo-600 hover:bg-indigo-100 focus:outline-none focus:shadow-outline focus:border-indigo-300 transition duration-150 ease-in-out`}
+            >
+              Fetch More
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
