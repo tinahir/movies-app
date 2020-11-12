@@ -7,11 +7,7 @@ import { appConfig } from '../AppConfig';
 import MessageBox from '../components/MessageBox';
 import SearchBox from '../components/SearchBox';
 import { fetcher } from '../fetcher';
-import {
-  ISearchFail,
-  ISearchResult,
-  ISearchSuccess,
-} from '../Model/SearchResult';
+import { ISearchResult, ISearchSuccess } from '../Model/SearchResult';
 
 function Movies() {
   const [searchText, setSearchText] = React.useState('marvel');
@@ -33,12 +29,17 @@ function Movies() {
     },
     {
       enabled: searchText.trim() !== '',
-      getFetchMore: (lastPage) => {
-        let res = lastPage as ISearchSuccess;
-        if (res.Search.length < 10) {
+      getFetchMore: (lastResult) => {
+        if (lastResult.Response === 'Flase') {
           return false;
         }
-        return res.page;
+
+        let data = lastResult as ISearchSuccess;
+        if (Array.isArray(data.Search) && data.Search.length < 10) {
+          return false;
+        }
+
+        return data.page;
       },
       refetchOnWindowFocus: false,
     }
@@ -59,7 +60,7 @@ function Movies() {
     }
 
     if (data[0].Response === 'False') {
-      return <MessageBox>{(data[0] as ISearchFail).Error}</MessageBox>;
+      return <MessageBox>Your favourite movie did not find</MessageBox>;
     }
 
     return (
