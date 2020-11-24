@@ -70,8 +70,12 @@ function Movies() {
         {data.map((page, index) => (
           <React.Fragment key={index}>
             {(page as ISearchSuccess).Search.map((item) => (
-              <Link to={`/movies/${item.imdbID}`} key={item.imdbID}>
-                <article css={tw`md:flex flex-col shadow`}>
+              <Link
+                to={`/movies/${item.imdbID}`}
+                key={item.imdbID}
+                css={tw`hover:outline-white hover:border-blue-300`}
+              >
+                <article css={tw`md:flex flex-col `}>
                   {item.Poster === 'N/A' ? (
                     <div
                       css={tw`md:flex-shrink-0 flex items-center justify-center text-2xl font-extrabold	h-64 w-full bg-gray-900 text-white text-opacity-30`}
